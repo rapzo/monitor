@@ -43,7 +43,7 @@ void catch_sigusr(int signo) {
 
   //write(STDOUT_FILENO, msg, size);
   //printf("PID to kill: %d-%d\n", getpid(), getppid());
-  
+
   kill(-getpid(), SIGQUIT);
 }
 
@@ -128,15 +128,15 @@ int lookup_word(scrnr *entity, char *word, int duration) {
     if ((pid = fork()) <= 0)
       break;
   }
-  
+
   if (pid == -1) {
-    
+
     perror("Creating control fork.");
     return -1;
 
   } else if (pid == 0) {
     if (i == 0) {
-      
+
       setpgid(0, entity->pid);
       if (run_tail(entity, command_pd[1]) == -1) {
         return -1;
@@ -154,19 +154,19 @@ int lookup_word(scrnr *entity, char *word, int duration) {
 
     while (!stop) {
       n = read(process_pd[0], buffer, MAXBUFFER);
-      
+
       if (n > 0) {
         // Tempo da leitura
         // ok, pode ser ums milésimos de segundo diferentes da escrita no 
         // ficheiro, mas pouco
         t = time(NULL);
-        
+
         // Remove o último '\n' comum das linhas de execuções como o tail e o 
         // grep
         buffer[n - 1] = '\0';
         result = malloc(sizeof(char) * n);
         strcpy(result, buffer);
-        
+
         // É melhor não montar altas strings quando o output pode ser feito aqui
         //sprintf(result, "%s - %s - \"%s\"", get_datetime(&t), entity->name, tmp);
 
@@ -175,7 +175,8 @@ int lookup_word(scrnr *entity, char *word, int duration) {
       }
 
     }
-    wait(&status);
+    // Comentar isto porque está a deixar processos defuncts :-\
+    // wait(&status);
   }
 
   return 0;
@@ -239,7 +240,7 @@ int run_grep(scrnr *entity, char *word, int pread, int pwrite) {
       return -1;
     }
     close(pread);
-    
+
     if (dup2(pwrite, STDOUT_FILENO) != STDOUT_FILENO) {
       perror("Piping grep output to the main pipe.");
       return -1;
@@ -374,7 +375,7 @@ int main(int argc, char *argv[]) {
   // limit->tm_sec = atoi(argv[1]);
   // printf("T minus %d to STOP.\n", limit->tm_sec);
   duration = atoi(argv[1]);
-  
+
   // Reserva espaço para a estrutura de controlo
   for (i = 3, j = 0; i < argc; i++, j++) {
     errno = 0;
@@ -426,12 +427,12 @@ int main(int argc, char *argv[]) {
 
     if ((pid = fork()) != -1) {
       if (pid == 0) {
-        
+
         setpgid(0, getppid());
         return check_entities(monos);
 
       } else {
-        
+
         if (countdown_timer(duration) == 0) {
           kill(0, SIGINT);
         }
@@ -448,3 +449,4 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+
